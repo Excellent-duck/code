@@ -43,15 +43,45 @@ void ring_buffer_init(RingBuffer_t *rb)
     rb->tail = 0;
 }
 
-bool ring_buffer_is_full(RingBuffer_t *rb)
+bool ring_buffer_is_full(RingBuffer_t *rb)//判断是否满了
 {
     if((rb->head+1)% RING_BUFFER_SIZE == rb->tail)
     {
-        return false;
+        return true;
     }
+}
+bool ring_buffer_is_empty(RingBuffer_t *rb)//判空
+{
+    if(rb->tail == rb->head)
+    {
+        return true;
+    }
+}
+bool ring_buffer_put(RingBuffer_t *rb,uint32_t data)
+{
+    if(true ==  ring_buffer_is_full(rb))
+    {
+        return false;
+    }else{
+        rb->buffer[rb->head] = data;
+        rb->head = (rb->head +1)%RING_BUFFER_SIZE;
+        return true;
+        
+    }    
 }
 
 
+bool ring_buffer_get(RingBuffer_t *rb,uint32_t *p_data)
+{
+    if(true == ring_buffer_is_empty(rb))
+    {
+        return false;
+    }else{
+       *p_data = rb->buffer[rb->tail];
+       rb->tail = (rb->tail + 1)%RING_BUFFER_SIZE;
+       return true; 
+    }
+}
 
 
 
@@ -128,9 +158,40 @@ void process_wave_update(uint8_t node_idx,uint8_t update_status,uint8_t extra_st
 
 int main()
 {
-    printf("===chonggou start");
-    process_wave_update(0,0x00000001,0x01);
-    printf("node 0,wave 0,data: 0x%04X\n",g_node_wave_config[0].wave_data[0]);
-    printf("node 0,wave 32 data: 0x%04X\n",g_node_wave_config[0].wave_data[32]);
+    // printf("===chonggou start");
+    // process_wave_update(0,0x00000001,0x01);
+    // printf("node 0,wave 0,data: 0x%04X\n",g_node_wave_config[0].wave_data[0]);
+    // printf("node 0,wave 32 data: 0x%04X\n",g_node_wave_config[0].wave_data[32]);
+
+    printf("======环形缓冲池=========");
+    RingBuffer_t my_rb;
+    ring_buffer_init(&my_rb);//初始化池子
+
+    uint32_t read_data = 0;
+    printf("\nxie data : 111,222,333\n");
+    ring_buffer_put(&my_rb,111);
+    ring_buffer_put(&my_rb,222);
+    ring_buffer_put(&my_rb,333);
+
+    if(ring_buffer_get(&my_rb,&read_data))//第一次读数据
+    {
+        printf("read data is %u\n",&read_data);
+    }
+        if(ring_buffer_get(&my_rb,&read_data))//第二次读数据
+    {
+        printf("read data is %u\n",read_data);
+    }
+        if(ring_buffer_get(&my_rb,&read_data))//第三次读数据
+    {
+        printf("read data is %u\n",read_data);
+    }
+        if(ring_buffer_get(&my_rb,&read_data))//第四次读data
+    {
+        printf("read data is %u\n",read_data);
+    }else{
+        printf("读第四次数据 is not ok");
+    }
+
+
     return 0;
 }
